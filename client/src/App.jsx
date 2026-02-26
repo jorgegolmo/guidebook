@@ -9,6 +9,7 @@ import Dashboard from './pages/Dashboard.jsx'; //EDITADO
 import Login from './pages/Login.jsx'; //EDITADO
 import Register from './pages/Register.jsx'; //EDITADO
 import SubmitLog from './pages/SubmitLog.jsx'; //EDITADO
+import GuidelinesPage from './pages/GuidelinesPage.jsx';
 
 function App() {
   // 1. Get the current user from Local Storage
@@ -23,7 +24,7 @@ function App() {
         {/* Pass the real username to the Navbar if the user is logged in */}
         {isAuthenticated && <Navbar username={currentUser.user.username} />}
         
-        <main className="main-content">
+        <main className="main-content" style={{ paddingTop: '70px' }}>
           <Routes>
             {/* Public Route */}
             <Route path="/login" element={<Login />} />
@@ -37,6 +38,11 @@ function App() {
             <Route 
               path="/log-usage" 
               element={isAuthenticated ? <SubmitLog /> : <Navigate to="/login" />} 
+            />
+
+            <Route 
+              path="/guidelines" 
+              element={isAuthenticated ? <GuidelinesPage /> : <Navigate to="/login" />} 
             />
 
             {/* Fallback route */}

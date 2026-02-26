@@ -24,6 +24,9 @@ const Navbar = ({ username }) => {
       </div>
       
       <div style={styles.userSection}>
+        <Link to="/guidelines" style={{ ...styles.link, marginRight: '20px', fontSize: '0.9rem' }}>
+          Guidelines
+        </Link>
         <span style={styles.greeting}>Hello, {username}</span>
         <button onClick={handleLogout} style={styles.logoutButton}>
           Log Out
@@ -36,13 +39,18 @@ const Navbar = ({ username }) => {
 // Inline styles (same as before)
 const styles = {
   navbar: {
+    position: 'fixed',      // stick to the top of the viewport
+    top: 0,
+    left: 0,
+    right: 0,
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
     backgroundColor: '#333',
     color: '#fff',
     padding: '10px 20px',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+    zIndex: 1001          // make sure it's above overlays
   },
   brand: { margin: 0 },
   link: { color: '#fff', textDecoration: 'none' },

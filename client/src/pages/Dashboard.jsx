@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
 import logService from '../services/logService';
+import Guidelines from '../components/Guidelines.jsx';
 
 // Register Chart.js components
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
@@ -62,11 +63,8 @@ const Dashboard = () => {
     };
   };
 
-  // Static guidelines for now
-  const guidelines = [
-    { id: 1, title: "Cite Your AI", description: "Always include a note indicating which AI tool was used and how it assisted you." },
-    { id: 2, title: "Verify Facts", description: "AI can hallucinate. Cross-reference any factual claims with academic sources." }
-  ];
+  // we'll show a clickable list of guidelines via the shared component
+
 
   if (isLoading) return <div style={styles.center}>Loading your dashboard...</div>;
   if (error) return <div style={{ ...styles.center, color: 'red' }}>{error}</div>;
@@ -112,19 +110,9 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Right Column: Guidelines */}
+        {/* Right Column: Guidelines widget */}
         <div style={styles.sideColumn}>
-          <div style={styles.card}>
-            <h3>Teacher Guidelines</h3>
-            <ul style={styles.guidelineList}>
-              {guidelines.map(g => (
-                <li key={g.id} style={styles.guidelineItem}>
-                  <strong>{g.title}</strong>
-                  <p style={styles.guidelineDesc}>{g.description}</p>
-                </li>
-              ))}
-            </ul>
-          </div>
+          <Guidelines />
         </div>
       </div>
     </div>
