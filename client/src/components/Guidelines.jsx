@@ -142,6 +142,8 @@ const styles = {
     borderRadius: '12px',
     maxWidth: '800px',
     width: '90%',
+    maxHeight: '80vh',        // prevent overflow beyond viewport
+    overflowY: 'auto',       // scroll when content is long
     textAlign: 'center',
     boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
   },

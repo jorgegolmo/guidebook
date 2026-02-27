@@ -102,6 +102,8 @@ const styles = {
   container: { padding: '20px', maxWidth: '800px', margin: '0 auto' },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' },
   backButton: { background: 'none', border: 'none', color: '#0056b3', cursor: 'pointer', fontSize: '16px', textDecoration: 'underline' },
+  // ensure the header stays visible below fixed navbar
+  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' },
   card: { backgroundColor: '#fff', padding: '30px', borderRadius: '8px', border: '1px solid #ccc', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' },
   instructions: { color: '#555', marginBottom: '20px', fontSize: '15px', lineHeight: '1.5' },
   form: { display: 'flex', flexDirection: 'column', gap: '20px' },

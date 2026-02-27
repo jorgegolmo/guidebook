@@ -90,7 +90,7 @@ const Register = () => {
 
 // Reusing the same clean styles from Login
 const styles = {
-  container: { maxWidth: '400px', margin: '100px auto', padding: '20px', textAlign: 'center', border: '1px solid #ccc', borderRadius: '8px', boxShadow: '0 4px 8px rgba(0,0,0,0.1)', backgroundColor: '#fff' },
+  container: { maxWidth: '400px', margin: 'auto', padding: '20px', textAlign: 'center', border: '1px solid #ccc', borderRadius: '8px', boxShadow: '0 4px 8px rgba(0,0,0,0.1)', backgroundColor: '#fff' },
   form: { display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '20px' },
   inputGroup: { display: 'flex', flexDirection: 'column', textAlign: 'left' },
   input: { padding: '10px', fontSize: '16px', borderRadius: '4px', border: '1px solid #ccc' },

@@ -11,8 +11,8 @@ const Navbar = ({ username }) => {
     // 1. Actually clear the JWT token and user data from Local Storage
     authService.logout();
     
-    // 2. Redirect back to the login page
-    navigate('/login');
+    // 2. Redirect back to the login page with a full page reload
+    window.location.href = '/login';
   };
 
   return (

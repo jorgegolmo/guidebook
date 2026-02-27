@@ -14,6 +14,7 @@ const Dashboard = () => {
   const [logs, setLogs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [activeLog, setActiveLog] = useState(null); // for viewing log details
 
   // Fetch logs when the dashboard loads
   useEffect(() => {
@@ -97,8 +98,12 @@ const Dashboard = () => {
               <p style={{ color: '#555' }}>You haven't logged any AI usage yet. Click the button above to start!</p>
             ) : (
               <ul style={styles.logList}>
-                {logs.slice(0, 5).map(log => (
-                  <li key={log._id} style={styles.logItem}>
+                {logs.map(log => (
+                  <li
+                    key={log._id}
+                    style={{ ...styles.logItem, cursor: 'pointer' }}
+                    onClick={() => setActiveLog(log)}
+                  >
                     <strong>{log.topic}</strong>
                     <span style={styles.dateText}>
                       {new Date(log.createdAt).toLocaleDateString()}
@@ -114,6 +119,25 @@ const Dashboard = () => {
         <div style={styles.sideColumn}>
           <Guidelines />
         </div>
+
+        {/* Log detail modal (reuses similar overlay styles) */}
+        {activeLog && (
+          <div style={styles.fullScreenModal} onClick={() => setActiveLog(null)}>
+            <div style={styles.modalContent} onClick={e => e.stopPropagation()}>
+              <h2 style={styles.modalTitle}>{activeLog.topic}</h2>
+              <p style={styles.modalText}>{activeLog.transcript}</p>
+              <p style={{ fontSize: '0.9rem', color: '#888' }}>
+                Logged on {new Date(activeLog.createdAt).toLocaleString()}
+              </p>
+              <button
+                style={styles.closeButton}
+                onClick={() => setActiveLog(null)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -135,7 +159,54 @@ const styles = {
   dateText: { color: '#888', fontSize: '14px' },
   guidelineList: { listStyle: 'none', padding: 0, margin: 0 },
   guidelineItem: { marginBottom: '15px', paddingBottom: '15px', borderBottom: '1px solid #eee' },
-  guidelineDesc: { margin: '5px 0 0 0', fontSize: '14px', color: '#555', lineHeight: '1.4' }
+  guidelineDesc: { margin: '5px 0 0 0', fontSize: '14px', color: '#555', lineHeight: '1.4' },
+
+  // reuse modal styles from Guidelines component so the look is consistent
+  fullScreenModal: {
+    position: 'fixed',
+    top: '60px',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    padding: '50px',
+    borderRadius: '12px',
+    maxWidth: '800px',
+    width: '90%',
+    maxHeight: '80vh',
+    overflowY: 'auto',
+    textAlign: 'center',
+    boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
+  },
+  modalTitle: {
+    fontSize: '2rem',
+    color: '#333',
+    marginBottom: '20px'
+  },
+  modalText: {
+    fontSize: '1.2rem',
+    lineHeight: '1.6',
+    color: '#555',
+    marginBottom: '40px',
+    textAlign: 'left'
+  },
+  closeButton: {
+    padding: '12px 24px',
+    fontSize: '1.1rem',
+    backgroundColor: '#dc3545',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontWeight: 'bold'
+  }
 };
 
 export default Dashboard;

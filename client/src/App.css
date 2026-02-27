@@ -1,8 +1,25 @@
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  width: 100%;
+  height: 100vh;
+}
+
+.app-container {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 100%;
+}
+
+.main-content.auth-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .logo {

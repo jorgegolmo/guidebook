@@ -95,7 +95,7 @@ const Login = () => {
 const styles = {
   container: {
     maxWidth: '400px',
-    margin: '100px auto',
+    margin: 'auto',
     padding: '20px',
     textAlign: 'center',
     border: '1px solid #ccc',
