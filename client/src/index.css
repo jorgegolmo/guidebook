@@ -1,4 +1,6 @@
 :root {
+  --navbar-height: 60px; /* keep matched with Navbar padding/font-size */
+
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
@@ -24,9 +26,22 @@ a:hover {
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
+  /* normal document flow – nav lives above content */
   min-width: 320px;
+  min-height: 100vh;
+}
+
+/* sticky navbar occupies its own layout space, so no additional padding is needed */
+/* body.authenticated .main-content {
+  padding-top: var(--navbar-height);
+} */
+
+/* special layout for login/register pages */
+.auth-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
   min-height: 100vh;
 }
 

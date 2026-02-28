@@ -94,13 +94,20 @@ const Login = () => {
 // Inline styles (same as before, plus a disabled button style)
 const styles = {
   container: {
+    position: 'fixed',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+
     maxWidth: '400px',
-    margin: 'auto',
+    width: '90%',
     padding: '20px',
     textAlign: 'center',
     border: '1px solid #ccc',
     borderRadius: '8px',
-    boxShadow: '0 4px 8px rgba(0,0,0,0.1)'
+    boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+    backgroundColor: '#fff',
+    zIndex: 100 /* ensure above any background */
   },
   form: {
     display: 'flex',

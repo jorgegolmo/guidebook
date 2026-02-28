@@ -2,13 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
-import { Bar } from 'react-chartjs-2';
+import { Chart as ChartJS, CategoryScale, LinearScale, LineElement, PointElement, Title, Tooltip, Legend } from 'chart.js';
+import { Line } from 'react-chartjs-2';
 import logService from '../services/logService';
 import Guidelines from '../components/Guidelines.jsx';
 
 // Register Chart.js components
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+ChartJS.register(CategoryScale, LinearScale, LineElement, PointElement, Title, Tooltip, Legend);
 
 const Dashboard = () => {
   const [logs, setLogs] = useState([]);
@@ -35,27 +35,37 @@ const Dashboard = () => {
   }, []);
 
   // Helper function to process real MongoDB dates into Chart data
+  // The chart now shows counts per day instead of per month.
   const getChartData = () => {
-    const monthCounts = {
-      'Jan': 0, 'Feb': 0, 'Mar': 0, 'Apr': 0, 'May': 0, 'Jun': 0,
-      'Jul': 0, 'Aug': 0, 'Sep': 0, 'Oct': 0, 'Nov': 0, 'Dec': 0
-    };
+    // Use ISO date (YYYY-MM-DD) as internal key for easy sorting
+    const dayCounts = {};
 
     logs.forEach(log => {
       const date = new Date(log.createdAt);
-      // Get the short month name (e.g., "Jan", "Feb")
-      const month = date.toLocaleString('default', { month: 'short' });
-      if (monthCounts[month] !== undefined) {
-        monthCounts[month]++;
-      }
+      const iso = date.toISOString().split('T')[0]; // "2026-02-28"
+      dayCounts[iso] = (dayCounts[iso] || 0) + 1;
+    });
+
+    // sort keys chronologically
+    let sortedIso = Object.keys(dayCounts).sort();
+
+    // keep only the last two weeks
+    if (sortedIso.length > 14) {
+      sortedIso = sortedIso.slice(-14);
+    }
+
+    // produce human-friendly labels (e.g. "Feb 28")
+    const labels = sortedIso.map(iso => {
+      const d = new Date(iso);
+      return d.toLocaleDateString('default', { month: 'short', day: 'numeric' });
     });
 
     return {
-      labels: Object.keys(monthCounts),
+      labels,
       datasets: [
         {
           label: 'AI Interactions',
-          data: Object.values(monthCounts),
+          data: sortedIso.map(iso => dayCounts[iso]),
           backgroundColor: 'rgba(54, 162, 235, 0.6)',
           borderColor: 'rgba(54, 162, 235, 1)',
           borderWidth: 1,
@@ -85,9 +95,25 @@ const Dashboard = () => {
           <div style={styles.card}>
             <h3>Usage Over Time</h3>
             <div style={styles.chartContainer}>
-              <Bar 
-                data={getChartData()} 
-                options={{ maintainAspectRatio: false }} 
+              <Line
+                data={getChartData()}
+                options={{
+                  maintainAspectRatio: false,
+                  scales: {
+                    x: {
+                      title: { display: true, text: 'Date' },
+                      grid: { display: false }
+                    },
+                    y: {
+                      beginAtZero: true,
+                      ticks: {
+                        stepSize: 1,
+                        callback: value => Number.isInteger(value) ? value : null
+                      },
+                      title: { display: true, text: 'Prompts (count)' }
+                    }
+                  }
+                }}
               />
             </div>
           </div>

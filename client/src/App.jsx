@@ -10,6 +10,7 @@ import Login from './pages/Login.jsx'; //EDITADO
 import Register from './pages/Register.jsx'; //EDITADO
 import SubmitLog from './pages/SubmitLog.jsx'; //EDITADO
 import GuidelinesPage from './pages/GuidelinesPage.jsx';
+import LogsPage from './pages/LogsPage.jsx';
 
 function AppContent() {
   const location = useLocation();
@@ -23,13 +24,17 @@ function AppContent() {
   // Check if current route is a login or register page
   const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
 
+  React.useEffect(() => {
+    // when the user is logged in add a class to body so CSS can offset content
+    document.body.classList.toggle('authenticated', isAuthenticated);
+  }, [isAuthenticated]);
+
   return (
     <div className="app-container">
       {/* Pass the real username to the Navbar if the user is logged in */}
       {isAuthenticated && <Navbar username={currentUser.user.username} />}
       
-      <main className={`main-content ${isAuthPage ? 'auth-page' : ''}`} style={isAuthenticated ? { paddingTop: '70px' } : {}}>
-        <Routes>
+      <main className={`main-content ${isAuthPage ? 'auth-page' : ''}`}>        <Routes>
             {/* Public Route */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
@@ -47,6 +52,10 @@ function AppContent() {
             <Route 
               path="/guidelines" 
               element={isAuthenticated ? <GuidelinesPage /> : <Navigate to="/login" />} 
+            />
+            <Route 
+              path="/logs" 
+              element={isAuthenticated ? <LogsPage /> : <Navigate to="/login" />} 
             />
 
             {/* Fallback route */}
