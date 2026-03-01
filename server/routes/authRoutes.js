@@ -1,11 +1,20 @@
 // /server/routes/authRoutes.js
 
 const express = require('express');
-const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User'); 
 
 const router = express.Router();
+
+// --- Helper Function ---
+// Extracts token generation to prevent DRY violations and ensure consistent expiration times
+const generateToken = (user) => {
+  return jwt.sign(
+    { userId: user._id, username: user.username },
+    process.env.JWT_SECRET || 'fallback_super_secret_key_for_dev', 
+    { expiresIn: '1d' }
+  );
+};
 
 // @route   POST /api/auth/register
 // @desc    Register a new student account
@@ -14,32 +23,20 @@ router.post('/register', async (req, res) => {
   try {
     const { username, password } = req.body;
 
-    // 1. Validate input
     if (!username || !password) {
       return res.status(400).json({ message: 'Please provide both username and password.' });
     }
 
-    // 2. Check if the user already exists
     const existingUser = await User.findOne({ username });
     if (existingUser) {
       return res.status(400).json({ message: 'Username is already taken. Please choose another.' });
     }
 
-    // 3. Create the new user 
-    // (The plain-text password will be automatically hashed by our Mongoose pre-save hook)
-    const newUser = await User.create({
-      username,
-      password
-    });
+    // Create the new user (Password hashed automatically by User model pre-save hook)
+    const newUser = await User.create({ username, password });
 
-    // 4. Generate the JSON Web Token (JWT) so they are logged in immediately
-    const token = jwt.sign(
-      { userId: newUser._id, username: newUser.username },
-      process.env.JWT_SECRET || 'fallback_super_secret_key_for_dev', 
-      { expiresIn: '1d' }
-    );
+    const token = generateToken(newUser);
 
-    // 5. Send success response
     res.status(201).json({
       message: 'Registration successful',
       token: token,
@@ -50,6 +47,12 @@ router.post('/register', async (req, res) => {
     });
 
   } catch (error) {
+    // Handle Mongoose validation errors (e.g., password too short)
+    if (error.name === 'ValidationError') {
+      const messages = Object.values(error.errors).map(val => val.message);
+      return res.status(400).json({ message: messages[0] });
+    }
+    
     console.error('Registration Error:', error);
     res.status(500).json({ message: 'Server error during registration.' });
   }
@@ -68,20 +71,20 @@ router.post('/login', async (req, res) => {
     }
 
     const user = await User.findOne({ username });
+    
+    // Security Fix: Prevent Username Enumeration. 
+    // Do not reveal whether the username exists or if the password was just wrong.
     if (!user) {
-      return res.status(401).json({ message: 'Invalid credentials. User not found.' });
+      return res.status(401).json({ message: 'Invalid username or password.' });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    // Refactoring Fix: Use the Domain Model's method instead of raw bcrypt here
+    const isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      return res.status(401).json({ message: 'Invalid credentials. Incorrect password.' });
+      return res.status(401).json({ message: 'Invalid username or password.' });
     }
 
-    const token = jwt.sign(
-      { userId: user._id, username: user.username },
-      process.env.JWT_SECRET || 'fallback_super_secret_key_for_dev', 
-      { expiresIn: '1d' } 
-    );
+    const token = generateToken(user);
 
     res.status(200).json({
       message: 'Login successful',
@@ -93,22 +96,10 @@ router.post('/login', async (req, res) => {
     });
 
   } catch (error) {
-      // 1. Check if it's a Mongoose validation error (like the 6-character limit)
-      if (error.name === 'ValidationError') {
-        // Extract the first custom validation error message we wrote in User.js
-        const messages = Object.values(error.errors).map(val => val.message);
-        return res.status(400).json({ message: messages[0] });
-      }
-      
-      // 2. Check for duplicate key error (meaning the username is already taken)
-      if (error.code === 11000) {
-         return res.status(400).json({ message: 'That username is already taken. Please choose another one.' });
-      }
-
-      // 3. If it's something else entirely, log it and send a generic message
-      console.error("Registration Error:", error);
-      res.status(500).json({ message: 'Server error during registration' });
-    }
+    // Bug Fix: Removed the copy-pasted registration error handling.
+    console.error("Login Error:", error);
+    res.status(500).json({ message: 'Server error during login' });
+  }
 });
 
 module.exports = router;

@@ -1,16 +1,27 @@
 // /client/src/App.js
 
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import authService from './services/authService'; // Import the service
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, Outlet } from 'react-router-dom';
+import authService from './services/authService'; 
 
-import Navbar from './components/Navbar.jsx'; //EDITADO
-import Dashboard from './pages/Dashboard.jsx'; //EDITADO
-import Login from './pages/Login.jsx'; //EDITADO
-import Register from './pages/Register.jsx'; //EDITADO
-import SubmitLog from './pages/SubmitLog.jsx'; //EDITADO
+import Navbar from './components/Navbar.jsx'; 
+import Dashboard from './pages/Dashboard.jsx'; 
+import Login from './pages/Login.jsx'; 
+import Register from './pages/Register.jsx'; 
+import SubmitLog from './pages/SubmitLog.jsx'; 
 import GuidelinesPage from './pages/GuidelinesPage.jsx';
 import LogsPage from './pages/LogsPage.jsx';
+
+// --- Extracted Gatekeeper Component ---
+// This handles the authentication check in ONE place.
+const ProtectedLayout = ({ isAuthenticated }) => {
+  if (!isAuthenticated) {
+    // If not logged in, redirect to login page safely
+    return <Navigate to="/login" replace />;
+  }
+  // If logged in, render the child routes
+  return <Outlet />;
+};
 
 function AppContent() {
   const location = useLocation();
@@ -24,42 +35,34 @@ function AppContent() {
   // Check if current route is a login or register page
   const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
 
-  React.useEffect(() => {
+  useEffect(() => {
     // when the user is logged in add a class to body so CSS can offset content
     document.body.classList.toggle('authenticated', isAuthenticated);
   }, [isAuthenticated]);
 
   return (
     <div className="app-container">
-      {/* Pass the real username to the Navbar if the user is logged in */}
-      {isAuthenticated && <Navbar username={currentUser.user.username} />}
+      {/* Fixed Unsafe Access: Using optional chaining (?.) prevents the app from crashing 
+        if the local storage data structure is unexpected. 
+      */}
+      {isAuthenticated && <Navbar username={currentUser?.user?.username || 'Student'} />}
       
-      <main className={`main-content ${isAuthPage ? 'auth-page' : ''}`}>        <Routes>
-            {/* Public Route */}
+      <main className={`main-content ${isAuthPage ? 'auth-page' : ''}`}>        
+        <Routes>
+            {/* Public Routes */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
 
-            {/* Protected Routes: Only accessible if isAuthenticated is true */}
-            <Route 
-              path="/dashboard" 
-              element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />} 
-            />
-            <Route 
-              path="/log-usage" 
-              element={isAuthenticated ? <SubmitLog /> : <Navigate to="/login" />} 
-            />
-
-            <Route 
-              path="/guidelines" 
-              element={isAuthenticated ? <GuidelinesPage /> : <Navigate to="/login" />} 
-            />
-            <Route 
-              path="/logs" 
-              element={isAuthenticated ? <LogsPage /> : <Navigate to="/login" />} 
-            />
+            {/* Protected Routes Grouped Together */}
+            <Route element={<ProtectedLayout isAuthenticated={isAuthenticated} />}>
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/log-usage" element={<SubmitLog />} />
+              <Route path="/guidelines" element={<GuidelinesPage />} />
+              <Route path="/logs" element={<LogsPage />} />
+            </Route>
 
             {/* Fallback route */}
-            <Route path="*" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} />} />
+            <Route path="*" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />} />
           </Routes>
         </main>
       </div>

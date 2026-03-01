@@ -1,6 +1,6 @@
 // /client/src/pages/Dashboard.js
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Chart as ChartJS, CategoryScale, LinearScale, LineElement, PointElement, Title, Tooltip, Legend } from 'chart.js';
 import { Line } from 'react-chartjs-2';
@@ -9,6 +9,43 @@ import Guidelines from '../components/Guidelines.jsx';
 
 // Register Chart.js components
 ChartJS.register(CategoryScale, LinearScale, LineElement, PointElement, Title, Tooltip, Legend);
+
+// --- Extracted Business Logic (Pure Function) ---
+// This handles data transformation outside of the React render cycle.
+const transformLogsToChartData = (logs) => {
+  const dayCounts = {};
+
+  logs.forEach(log => {
+    const date = new Date(log.createdAt);
+    const iso = date.toISOString().split('T')[0]; 
+    dayCounts[iso] = (dayCounts[iso] || 0) + 1;
+  });
+
+  let sortedIso = Object.keys(dayCounts).sort();
+
+  if (sortedIso.length > 14) {
+    sortedIso = sortedIso.slice(-14);
+  }
+
+  const labels = sortedIso.map(iso => {
+    const d = new Date(iso);
+    return d.toLocaleDateString('default', { month: 'short', day: 'numeric' });
+  });
+
+  return {
+    labels,
+    datasets: [
+      {
+        label: 'AI Interactions',
+        data: sortedIso.map(iso => dayCounts[iso]),
+        backgroundColor: 'rgba(54, 162, 235, 0.6)',
+        borderColor: 'rgba(54, 162, 235, 1)',
+        borderWidth: 1,
+      },
+    ],
+  };
+};
+
 
 const Dashboard = () => {
   const [logs, setLogs] = useState([]);
@@ -52,48 +89,9 @@ const Dashboard = () => {
     fetchDashboardData();
   }, []);
 
-  // Helper function to process real MongoDB dates into Chart data
-  // The chart now shows counts per day instead of per month.
-  const getChartData = () => {
-    // Use ISO date (YYYY-MM-DD) as internal key for easy sorting
-    const dayCounts = {};
-
-    logs.forEach(log => {
-      const date = new Date(log.createdAt);
-      const iso = date.toISOString().split('T')[0]; // "2026-02-28"
-      dayCounts[iso] = (dayCounts[iso] || 0) + 1;
-    });
-
-    // sort keys chronologically
-    let sortedIso = Object.keys(dayCounts).sort();
-
-    // keep only the last two weeks
-    if (sortedIso.length > 14) {
-      sortedIso = sortedIso.slice(-14);
-    }
-
-    // produce human-friendly labels (e.g. "Feb 28")
-    const labels = sortedIso.map(iso => {
-      const d = new Date(iso);
-      return d.toLocaleDateString('default', { month: 'short', day: 'numeric' });
-    });
-
-    return {
-      labels,
-      datasets: [
-        {
-          label: 'AI Interactions',
-          data: sortedIso.map(iso => dayCounts[iso]),
-          backgroundColor: 'rgba(54, 162, 235, 0.6)',
-          borderColor: 'rgba(54, 162, 235, 1)',
-          borderWidth: 1,
-        },
-      ],
-    };
-  };
-
-  // we'll show a clickable list of guidelines via the shared component
-
+  // Memoize the chart data so it only recalculates when 'logs' changes,
+  // preventing unnecessary recalculations on every component render.
+  const chartData = useMemo(() => transformLogsToChartData(logs), [logs]);
 
   if (isLoading) return <div style={styles.center}>Loading your dashboard...</div>;
   if (error) return <div style={{ ...styles.center, color: 'red' }}>{error}</div>;
@@ -114,7 +112,7 @@ const Dashboard = () => {
             <h3>Usage Over Time</h3>
             <div style={styles.chartContainer}>
               <Line
-                data={getChartData()}
+                data={chartData}
                 options={{
                   maintainAspectRatio: false,
                   scales: {
@@ -209,7 +207,6 @@ const styles = {
   guidelineItem: { marginBottom: '15px', paddingBottom: '15px', borderBottom: '1px solid #eee' },
   guidelineDesc: { margin: '5px 0 0 0', fontSize: '14px', color: '#555', lineHeight: '1.4' },
 
-  // reuse modal styles from Guidelines component so the look is consistent
   fullScreenModal: {
     position: 'fixed',
     top: '60px',

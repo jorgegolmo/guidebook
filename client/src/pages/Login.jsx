@@ -8,13 +8,13 @@ const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
-  const [isLoading, setIsLoading] = useState(false); // New loading state
+  const [isLoading, setIsLoading] = useState(false);
   
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault(); 
-    setErrorMessage(''); // Clear any previous errors
+    setErrorMessage(''); 
 
     if (!username || !password) {
       setErrorMessage('Please enter both username and password.');
@@ -23,19 +23,11 @@ const Login = () => {
 
     try {
       setIsLoading(true);
-      
-      // 1. Call our real authentication service
       await authService.login(username, password);
-      
-      // 2. If successful, the token is now in localStorage. 
-      // Redirect the user to the dashboard.
-      window.location.href = '/dashboard';
-
+      navigate('/dashboard'); 
     } catch (error) {
-      // 3. If it fails, display the exact error message from the backend
       setErrorMessage(error.message || 'Failed to log in. Please try again.');
     } finally {
-      // 4. Turn off the loading state regardless of success or failure
       setIsLoading(false);
     }
   };
@@ -45,7 +37,6 @@ const Login = () => {
       <h2>AI Guidebook for Students</h2>
       <p>Please log in to track your AI usage and access resources.</p>
       
-      {/* Conditionally render the error message if one exists */}
       {errorMessage && <p style={styles.error}>{errorMessage}</p>}
       
       <form onSubmit={handleSubmit} style={styles.form}>
@@ -58,7 +49,7 @@ const Login = () => {
             onChange={(e) => setUsername(e.target.value)}
             placeholder="Enter your username"
             style={styles.input}
-            disabled={isLoading} // Disable input while loading
+            disabled={isLoading} 
           />
         </div>
 
@@ -91,14 +82,13 @@ const Login = () => {
   );
 };
 
-// Inline styles (same as before, plus a disabled button style)
+// Inline styles
 const styles = {
   container: {
     position: 'fixed',
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
-
     maxWidth: '400px',
     width: '90%',
     padding: '20px',
@@ -107,7 +97,7 @@ const styles = {
     borderRadius: '8px',
     boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
     backgroundColor: '#fff',
-    zIndex: 100 /* ensure above any background */
+    zIndex: 100 
   },
   form: {
     display: 'flex',
