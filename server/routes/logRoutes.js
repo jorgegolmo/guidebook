@@ -8,44 +8,78 @@ const UsageLog = require('../models/UsageLog');
 const { protect } = require('../middlewares/authMiddleware');
 
 // @route   POST /api/logs
-// @desc    Create a new AI usage log
-// @access  Private (Requires valid JWT token)
+// @desc    Create a new session (contains metadata and empty entries array)
+// @access  Private
 router.post('/', protect, async (req, res) => {
   try {
-    const { topic, transcript } = req.body;
+    const { aiModel, title } = req.body;
 
-    if (!topic || !transcript) {
-      return res.status(400).json({ message: 'Please provide both a topic and transcript.' });
-    }
+    if (!title) return res.status(400).json({ message: 'Please provide a title for the session.' });
 
-    // Create a new log entry.
-    // 'req.user.userId' is provided by the 'protect' middleware after validating the token.
-    const newLog = await UsageLog.create({
+    const session = await UsageLog.create({
       user: req.user.userId,
-      topic,
-      transcript,
+      aiModel: aiModel || 'Unspecified',
+      title,
+      entries: [],
     });
 
-    res.status(201).json(newLog);
+    res.status(201).json(session);
   } catch (error) {
-    console.error('Error saving usage log:', error);
-    res.status(500).json({ message: 'Server error while saving log.' });
+    console.error('Error creating session:', error);
+    res.status(500).json({ message: 'Server error while creating session.' });
+  }
+});
+
+// @route   POST /api/logs/:id/entries
+// @desc    Add a prompt/response entry to an existing session
+// @access  Private
+router.post('/:id/entries', protect, async (req, res) => {
+  try {
+    const { prompt, response } = req.body;
+    const sessionId = req.params.id;
+
+    if (!prompt) return res.status(400).json({ message: 'Please provide a prompt.' });
+
+    const session = await UsageLog.findOne({ _id: sessionId, user: req.user.userId });
+    if (!session) return res.status(404).json({ message: 'Session not found.' });
+
+    const entry = { prompt, response };
+    session.entries.push(entry);
+    await session.save();
+
+    // Return the newly added entry (the last array element)
+    const added = session.entries[session.entries.length - 1];
+    res.status(201).json(added);
+  } catch (error) {
+    console.error('Error adding entry:', error);
+    res.status(500).json({ message: 'Server error while adding entry.' });
   }
 });
 
 // @route   GET /api/logs
-// @desc    Get all AI usage logs for the logged-in student
-// @access  Private (Requires valid JWT token)
+// @desc    Get all sessions for the logged-in user
+// @access  Private
 router.get('/', protect, async (req, res) => {
   try {
-    // Find all logs that belong to this specific user ID.
-    // .sort({ createdAt: -1 }) ensures the newest logs appear first on the dashboard.
-    const logs = await UsageLog.find({ user: req.user.userId }).sort({ createdAt: -1 });
-
-    res.status(200).json(logs);
+    const sessions = await UsageLog.find({ user: req.user.userId }).sort({ updatedAt: -1 });
+    res.status(200).json(sessions);
   } catch (error) {
-    console.error('Error fetching logs:', error);
-    res.status(500).json({ message: 'Server error while fetching logs.' });
+    console.error('Error fetching sessions:', error);
+    res.status(500).json({ message: 'Server error while fetching sessions.' });
+  }
+});
+
+// @route GET /api/logs/:id
+// @desc  Get a single session by id (including entries)
+// @access Private
+router.get('/:id', protect, async (req, res) => {
+  try {
+    const session = await UsageLog.findOne({ _id: req.params.id, user: req.user.userId });
+    if (!session) return res.status(404).json({ message: 'Session not found.' });
+    res.status(200).json(session);
+  } catch (error) {
+    console.error('Error fetching session:', error);
+    res.status(500).json({ message: 'Server error while fetching session.' });
   }
 });
 

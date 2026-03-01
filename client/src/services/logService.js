@@ -16,42 +16,46 @@ const getAuthHeader = () => {
   }
 };
 
-// 1. Submit a new AI usage log
-const submitLog = async (topic, transcript) => {
-  const response = await fetch(API_URL, {
+// Create a new session (specify AI model and optional title)
+const createSession = async (aiModel, title = '') => {
+  const res = await fetch(API_URL, {
     method: 'POST',
     headers: getAuthHeader(),
-    body: JSON.stringify({ topic, transcript }),
+    body: JSON.stringify({ aiModel, title }),
   });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || 'Failed to submit log');
-  }
-
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || 'Failed to create session');
   return data;
 };
 
-// 2. Fetch all usage logs for the logged-in student
-const getLogs = async () => {
-  const response = await fetch(API_URL, {
-    method: 'GET',
-    headers: getAuthHeader(), // We only need headers here, no body for a GET request
+// Add an entry to an existing session
+const addEntry = async (sessionId, prompt, response = null) => {
+  const res = await fetch(`${API_URL}${sessionId}/entries`, {
+    method: 'POST',
+    headers: getAuthHeader(),
+    body: JSON.stringify({ prompt, response }),
   });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || 'Failed to fetch logs');
-  }
-
-  return data; // Returns an array of log objects from MongoDB
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || 'Failed to add entry');
+  return data;
 };
 
-const logService = {
-  submitLog,
-  getLogs,
+// Fetch all sessions for the user
+const getSessions = async () => {
+  const res = await fetch(API_URL, { method: 'GET', headers: getAuthHeader() });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || 'Failed to fetch sessions');
+  return data;
 };
+
+// Fetch a single session by id
+const getSession = async (sessionId) => {
+  const res = await fetch(`${API_URL}${sessionId}`, { method: 'GET', headers: getAuthHeader() });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || 'Failed to fetch session');
+  return data;
+};
+
+const logService = { createSession, addEntry, getSessions, getSession };
 
 export default logService;

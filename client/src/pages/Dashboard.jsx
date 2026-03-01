@@ -16,16 +16,34 @@ const Dashboard = () => {
   const [error, setError] = useState('');
   const [activeLog, setActiveLog] = useState(null); // for viewing log details
 
-  // Fetch logs when the dashboard loads
+  // Fetch sessions (and derive entries) when the dashboard loads
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
         setIsLoading(true);
-        const fetchedLogs = await logService.getLogs();
-        setLogs(fetchedLogs);
+        const sessions = await logService.getSessions();
+
+        // flatten entries across sessions to produce an entries array
+        const allEntries = [];
+        (sessions || []).forEach((s) => {
+          (s.entries || []).forEach((e) => {
+            allEntries.push({
+              _id: e._id || `${s._id}:${allEntries.length}`,
+              prompt: e.prompt,
+              response: e.response,
+              createdAt: e.createdAt,
+              sessionTitle: s.title || s.aiModel,
+              aiModel: s.aiModel,
+            });
+          });
+        });
+
+        // sort newest first
+        allEntries.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        setLogs(allEntries);
       } catch (err) {
-        console.error('Failed to fetch logs:', err);
-        setError('Could not load your AI usage data. Please try again later.');
+        console.error('Failed to fetch sessions:', err);
+        setError(err.message || 'Could not load your AI usage data. Please try again later.');
       } finally {
         setIsLoading(false);
       }
@@ -120,17 +138,20 @@ const Dashboard = () => {
 
           <div style={styles.card}>
             <h3>Recent AI Logs</h3>
-            {logs.length === 0 ? (
+                {logs.length === 0 ? (
               <p style={{ color: '#555' }}>You haven't logged any AI usage yet. Click the button above to start!</p>
             ) : (
               <ul style={styles.logList}>
-                {logs.map(log => (
+                {logs.slice(0, 10).map(log => (
                   <li
                     key={log._id}
                     style={{ ...styles.logItem, cursor: 'pointer' }}
                     onClick={() => setActiveLog(log)}
                   >
-                    <strong>{log.topic}</strong>
+                    <div>
+                      <strong>{log.prompt.substring(0, 80)}{log.prompt.length > 80 ? '...' : ''}</strong>
+                      <div style={{ fontSize: '12px', color: '#666' }}>{log.sessionTitle} — {log.aiModel}</div>
+                    </div>
                     <span style={styles.dateText}>
                       {new Date(log.createdAt).toLocaleDateString()}
                     </span>
@@ -150,11 +171,12 @@ const Dashboard = () => {
         {activeLog && (
           <div style={styles.fullScreenModal} onClick={() => setActiveLog(null)}>
             <div style={styles.modalContent} onClick={e => e.stopPropagation()}>
-              <h2 style={styles.modalTitle}>{activeLog.topic}</h2>
-              <p style={styles.modalText}>{activeLog.transcript}</p>
-              <p style={{ fontSize: '0.9rem', color: '#888' }}>
-                Logged on {new Date(activeLog.createdAt).toLocaleString()}
-              </p>
+                  <h2 style={styles.modalTitle}>{activeLog.prompt.substring(0, 120)}{activeLog.prompt.length > 120 ? '...' : ''}</h2>
+                  <p style={{ fontSize: '0.95rem', color: '#666', marginBottom: '12px' }}>Session: <strong>{activeLog.sessionTitle}</strong> — {activeLog.aiModel}</p>
+                  {activeLog.response && <div style={styles.modalText}>{activeLog.response}</div>}
+                  <p style={{ fontSize: '0.9rem', color: '#888', marginTop: '16px' }}>
+                    Logged on {new Date(activeLog.createdAt).toLocaleString()}
+                  </p>
               <button
                 style={styles.closeButton}
                 onClick={() => setActiveLog(null)}

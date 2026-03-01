@@ -2,33 +2,35 @@
 
 const mongoose = require('mongoose');
 
-const usageLogSchema = new mongoose.Schema(
+// Each session contains multiple prompt/response entries and metadata about the AI used
+const entrySchema = new mongoose.Schema(
   {
-    // The 'user' field links this specific log to the student who created it.
-    // This is vital for data privacy and filtering dashboard data.
+    prompt: { type: String, required: true },
+    response: { type: String },
+  },
+  { timestamps: true }
+);
+
+const sessionSchema = new mongoose.Schema(
+  {
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: true,
     },
-    topic: {
+    title: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    aiModel: {
       type: String,
       required: true,
-      trim: true, // Removes accidental whitespace from the beginning/end
-      maxLength: 100, // Keeps topics concise for the UI
+      trim: true,
     },
-    transcript: {
-      type: String,
-      required: true,
-      // We do not set a maxLength here because AI chat transcripts can be very long
-    },
+    entries: [entrySchema],
   },
-  {
-    // This automatically adds 'createdAt' and 'updatedAt' fields to every document.
-    // 'createdAt' is what we will use to group logs by month for the dashboard chart.
-    timestamps: true, 
-  }
+  { timestamps: true }
 );
 
-// Compile the schema into a model and export it
-module.exports = mongoose.model('UsageLog', usageLogSchema);
+module.exports = mongoose.model('UsageLog', sessionSchema);
