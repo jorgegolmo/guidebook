@@ -15,8 +15,6 @@ const guidelineSchema = new mongoose.Schema(
       required: [true, 'A guideline must have a description'],
       trim: true,
     },
-    // Optional: We could add a 'content' or 'link' field later if the 
-    // guidelines become full articles instead of just short tips.
   },
   {
     // Automatically adds createdAt and updatedAt fields

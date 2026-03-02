@@ -21,8 +21,4 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Note: In a fully fleshed-out system, we would add POST/PUT/DELETE routes here 
-// protected by an "Admin/Teacher" middleware role to allow teachers to add new guidelines. 
-// For this student-focused MVP, we will assume guidelines are seeded directly into the database.
-
 module.exports = router;
