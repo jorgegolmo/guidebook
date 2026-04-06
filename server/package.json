@@ -1,4 +1,26 @@
 {
+  "scripts": {
+    "test": "jest --forceExit",
+    "test:coverage": "jest --coverage --forceExit"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": ["**/tests/**/*.test.js"],
+    "collectCoverageFrom": [
+      "middlewares/**/*.js",
+      "routes/**/*.js",
+      "models/**/*.js",
+      "app.js"
+    ],
+    "coverageThresholds": {
+      "global": {
+        "lines": 60,
+        "branches": 70,
+        "functions": 80
+      }
+    },
+    "coverageReporters": ["text", "lcov", "html"]
+  },
   "dependencies": {
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.3",
@@ -7,5 +29,9 @@
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.2.2"
+  },
+  "devDependencies": {
+    "jest": "^29.0.0",
+    "supertest": "^7.0.0"
   }
 }
