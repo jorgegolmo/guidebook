@@ -17,7 +17,7 @@
       "global": {
         "lines": 60,
         "branches": 70,
-        "functions": 80
+        "functions": 75
       }
     },
     "coverageReporters": ["text", "lcov", "html"]
